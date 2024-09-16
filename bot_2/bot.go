@@ -10,13 +10,49 @@ import (
 	"strings"
 )
 
+var genres = map[string]bool{
+	"аниме":           true,
+	"биография":       true,
+	"боевик":          true,
+	"вестерн":         true,
+	"военный":         true,
+	"детектив":        true,
+	"детский":         true,
+	"для взрослых":    true,
+	"документальный":  true,
+	"драма":           true,
+	"игра":            true,
+	"история":         true,
+	"комедия":         true,
+	"концерт":         true,
+	"короткометражка": true,
+	"криминал":        true,
+	"мелодрама":       true,
+	"музыка":          true,
+	"мультфильм":      true,
+	"мюзикл":          true,
+	"новости":         true,
+	"приключения":     true,
+	"реальное ТВ":     true,
+	"семейный":        true,
+	"спорт":           true,
+	"ток-шоу":         true,
+	"триллер":         true,
+	"ужасы":           true,
+	"фантастика":      true,
+	"фильм-нуар":      true,
+	"фэнтези":         true,
+	"церемония":       true,
+}
+
 type Doc struct {
 	Name string `json:"name"`
 	Year int    `json:"year"`
 }
 
 type Response struct {
-	Docs []Doc `json:"docs"`
+	Docs   []Doc `json:"docs"`
+	answer string
 }
 
 const (
@@ -114,63 +150,33 @@ func requestMovie(bot *tgbotapi.BotAPI, client *MovieClient, genre string, movie
 	}
 	responseUser(bot, chatID, answer, moviesCount)
 }
+func (resp *Response) AnswerUser(count int) {
+	answer := ""
+	var countMovie int
+	for _, movie := range resp.Docs {
+		if count == 0 {
+			break
+		}
+		if len(movie.Name) > 0 {
+			countMovie++
+			count--
+			answer += fmt.Sprintf("%v: Фильм:\n\t%v\nYear:\n\t%v\n\n", countMovie, movie.Name, movie.Year)
+		}
+	}
+	resp.answer = answer
+}
 
 func responseUser(bot *tgbotapi.BotAPI, chatID int64, msg []byte, count int) {
 	var response Response
 	if err := json.Unmarshal(msg, &response); err != nil {
 		panic(err)
 	}
-	countMovie := 0
-	for _, movie := range response.Docs {
-		if count > 0 {
-			if len(movie.Name) == 0 {
-				continue
-			}
-			count--
-			countMovie++
-			sendMessage(bot, chatID, fmt.Sprintf("%v: Фильм:\n\t%v\n\tYear:\n\t%v", countMovie, movie.Name, movie.Year))
-		} else {
-			sendMessage(bot, chatID, "Будем ждать тебя снова\nНапиши /start")
-			break
-		}
-	}
+	response.AnswerUser(count)
+	sendMessage(bot, chatID, response.answer)
+
 }
 
 func genreFound(msg string) bool {
-	genres := map[string]bool{
-		"аниме":           true,
-		"биография":       true,
-		"боевик":          true,
-		"вестерн":         true,
-		"военный":         true,
-		"детектив":        true,
-		"детский":         true,
-		"для взрослых":    true,
-		"документальный":  true,
-		"драма":           true,
-		"игра":            true,
-		"история":         true,
-		"комедия":         true,
-		"концерт":         true,
-		"короткометражка": true,
-		"криминал":        true,
-		"мелодрама":       true,
-		"музыка":          true,
-		"мультфильм":      true,
-		"мюзикл":          true,
-		"новости":         true,
-		"приключения":     true,
-		"реальное ТВ":     true,
-		"семейный":        true,
-		"спорт":           true,
-		"ток-шоу":         true,
-		"триллер":         true,
-		"ужасы":           true,
-		"фантастика":      true,
-		"фильм-нуар":      true,
-		"фэнтези":         true,
-		"церемония":       true,
-	}
 	return genres[msg]
 }
 
