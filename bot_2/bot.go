@@ -60,8 +60,10 @@ const (
 	EnterQuantity = 1
 )
 
-var userChatAction = make(map[int64]int)      // Инициализация карты действий пользователей
-var userMessageGenre = make(map[int64]string) // Сохранение жанра для каждого пользователя
+var userChatAction = make(map[int64]int) // Инициализация карты действий пользователей
+var userMessageGenre = make(map[int64]string)
+
+// Сохранение жанра для каждого пользователя
 
 func main() {
 	tgToken, apiToken := getTokens()
@@ -72,8 +74,11 @@ func main() {
 	}
 
 	client := NewMovieClient(apiToken)
-
 	updates := requestAnswer(bot)
+	BotStart(bot, updates, client)
+}
+
+func BotStart(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, client *MovieClient) {
 	for update := range updates {
 		if update.Message == nil {
 			continue // Пропускаем, если нет сообщения
@@ -106,15 +111,18 @@ func main() {
 				continue
 			}
 		}
+		UserStart(bot, chatID, text)
 
-		// Обработка команд вне состояний
-		switch text {
-		case "/start":
-			sendMessage(bot, chatID, "**Привет**\n, я помогу тебе выбрать фильм или сериал😁Напиши жанр: ")
-			userChatAction[chatID] = FindGenre
-		default:
-			sendMessage(bot, chatID, "Привет\n\tПопробуй написать команду /start")
-		}
+	}
+}
+
+func UserStart(bot *tgbotapi.BotAPI, chatId int64, text string) {
+	switch text {
+	case "/start":
+		sendMessage(bot, chatId, "Привет, я помогу тебе выбрать фильм или сериал\nНапиши жанр: ")
+		userChatAction[chatId] = FindGenre
+	default:
+		sendMessage(bot, chatId, "Привет\n\tПопробуй написать команду /start")
 	}
 }
 
@@ -150,6 +158,7 @@ func requestMovie(bot *tgbotapi.BotAPI, client *MovieClient, genre string, movie
 	}
 	responseUser(bot, chatID, answer, moviesCount)
 }
+
 func (resp *Response) AnswerUser(count int) {
 	answer := ""
 	var countMovie int
