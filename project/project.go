@@ -80,6 +80,7 @@ func (log *Log) LoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
 	f, err := os.OpenFile(LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
