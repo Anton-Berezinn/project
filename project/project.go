@@ -90,6 +90,7 @@ func main() {
 	er := &Log{
 		log: ilog,
 	}
+
 	http.HandleFunc("/", er.MainPage)
 	http.HandleFunc("/login", er.LoginPage)
 	http.HandleFunc("/error", er.ErrorPasword)
